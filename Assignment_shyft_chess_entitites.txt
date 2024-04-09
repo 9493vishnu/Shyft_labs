@@ -1,0 +1,177 @@
+import java.util.Arrays;
+
+class Piece {
+    private String type;
+    private String color;
+    private int row;
+    private int col;
+
+    public Piece(String type, String color, int row, int col) {
+        this.type = type;
+        this.color = color;
+        this.row = row;
+        this.col = col;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public int getRow() {
+        return row;
+    }
+
+    public int getCol() {
+        return col;
+    }
+
+    public void move(int newRow, int newCol) {
+        this.row = newRow;
+        this.col = newCol;
+    }
+
+    public boolean isValidMove(int newRow, int newCol, Piece[][] squares) {
+        return false; // To be overridden by specific pieces
+    }
+}
+
+class Pawn extends Piece {
+    public Pawn(String color, int row, int col) {
+        super("Pawn", color, row, col);
+    }
+
+    //overriding
+    public boolean isValidMove(int newRow, int newCol, Piece[][] squares) {
+        int rowDiff = newRow - getRow();
+        int colDiff = Math.abs(newCol - getCol());
+
+        if (getColor().equals("White")) {
+            if (rowDiff == -1 && colDiff == 0 && squares[newRow][newCol] == null) {
+                return true; 
+            } else if (rowDiff == -1 && colDiff == 1 && squares[newRow][newCol] != null) {
+                return true; // Capture diagonally
+            }
+        } else {
+            if (rowDiff == 1 && colDiff == 0 && squares[newRow][newCol] == null) {
+                return true; 
+            } else if (rowDiff == 1 && colDiff == 1 && squares[newRow][newCol] != null) {
+                return true; // Capture diagonally
+            }
+        }
+        return false;
+    }
+}
+
+class Rook extends Piece {
+    public Rook(String color, int row, int col) {
+        super("Rook", color, row, col);
+    }
+
+    //overriding
+    public boolean isValidMove(int newRow, int newCol, Piece[][] squares) {
+        if (getRow() == newRow && getCol() != newCol) {
+            // horizontal move
+            int step = getCol() < newCol ? 1 : -1;
+            for (int col = getCol() + step; col != newCol; col += step) {
+                if (squares[newRow][col] != null) {
+                    return false; // Path blocked
+                }
+            }
+            return true;
+        } else if (getRow() != newRow && getCol() == newCol) {
+            // vertical move
+            int step = getRow() < newRow ? 1 : -1;
+            for (int row = getRow() + step; row != newRow; row += step) {
+                if (squares[row][newCol] != null) {
+                    return false; // Path blocked
+                }
+            }
+            return true;
+        }
+        return false; // invalid move
+    }
+}
+
+class Bishop extends Piece {
+    public Bishop(String color, int row, int col) {
+        super("Bishop", color, row, col);
+    }
+
+    //overiding
+    public boolean isValidMove(int newRow, int newCol, Piece[][] squares) {
+        int rowDiff = Math.abs(newRow - getRow());
+        int colDiff = Math.abs(newCol - getCol());
+
+        if (rowDiff == colDiff) {
+            int rowStep = newRow > getRow() ? 1 : -1;
+            int colStep = newCol > getCol() ? 1 : -1;
+            int row = getRow() + rowStep;
+            int col = getCol() + colStep;
+
+            while (row != newRow && col != newCol) {
+                if (squares[row][col] != null) {
+                    return false; // Path blocked
+                }
+                row += rowStep;
+                col += colStep;
+            }
+            return true;
+        }
+        return false; // invalid move
+    }
+}
+
+class Board {
+    private Piece[][] squares;
+
+    public Board() {
+        squares = new Piece[8][8]; // 8x8 chessboard
+    }
+
+    public void placePiece(Piece piece, int row, int col) {
+        squares[row][col] = piece;
+    }
+
+    public Piece getPiece(int row, int col) {
+        return squares[row][col];
+    }
+
+    public void movePiece(int fromRow, int fromCol, int toRow, int toCol) {
+        Piece piece = squares[fromRow][fromCol];
+        if (piece != null && piece.isValidMove(toRow, toCol, squares)) {
+            piece.move(toRow, toCol);
+            squares[toRow][toCol] = piece;
+            squares[fromRow][fromCol] = null;
+        } else {
+            System.out.println("Invalid move!");
+        }
+    }
+
+    public void printBoard() {
+        for (Piece[] row : squares) {
+            for (Piece piece : row) {
+                System.out.print((piece != null ? piece.getType() + " " + piece.getColor() : "-") + "\t");
+            }
+            System.out.println();
+        }
+    }
+}
+
+public class ChessGame {
+    public static void main(String[] args) {
+        Board board = new Board();
+        board.placePiece(new Rook("White", 0, 0), 0, 0);
+        board.placePiece(new Pawn("Black", 1, 0), 1, 0);
+
+        board.printBoard();
+
+        board.movePiece(1, 0, 2, 0); // passing valid move
+        board.movePiece(0, 0, 2, 0); // passing Invalid move
+
+        board.printBoard();
+    }
+}
